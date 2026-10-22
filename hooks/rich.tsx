@@ -1,6 +1,6 @@
 import type { ElementTable, RenderChildren } from 'claude-code'
 
-import { COLORS, SVG_COLORS, formatClock, plural } from './core'
+import { COLORS, SVG_COLORS, formatClock, plural, shorten } from './core'
 import type { Panel } from './core'
 import type { Dashboard, GateView, McpRowView, ServerDetailView } from './view'
 
@@ -23,6 +23,8 @@ const MODERN: Typography = {
 const LEGACY: Typography = { caption: {}, footnote: {}, mono: {}, number: {} }
 
 const BAR_WIDTH = 300
+
+const shortenStart = (text: string, room: number): string => (text.length <= room ? text : `…${text.slice(text.length - room + 1)}`)
 
 const ringSvg = (fraction: number, color: string): string => {
   const radius = 34
@@ -179,7 +181,7 @@ const repoCard = (paint: Paint, board: Dashboard) => {
       <Box key={`file:${file.path}`} flexDirection="row" gap={1} alignItems="center">
         <Box flexGrow={1} flexShrink={1}>
           <Text {...paint.type.mono} {...paint.type.footnote} wrap="truncate-start">
-            {file.path}
+            {shortenStart(file.path, 34)}
           </Text>
         </Box>
         <Svg source={splitBarSvg(file.added, file.removed, file.fraction)} alt={`${file.added} added, ${file.removed} removed`} width={80} height={6} />
@@ -258,7 +260,7 @@ const slowCard = (paint: Paint, board: Dashboard) => {
         </Box>
         <Box flexGrow={1} flexShrink={1}>
           <Text {...paint.type.mono} {...paint.type.footnote} wrap="truncate">
-            {row.label}
+            {shorten(row.label, 30)}
           </Text>
         </Box>
         <Svg source={barSvg(row.fraction, row.isFailed ? SVG_COLORS.error : row.kind === 'Agent' ? SVG_COLORS.agent : paint.accent, 110)} alt={`${row.time}`} width={110} height={6} />
@@ -417,7 +419,7 @@ const drawDetail = (paint: Paint, detail: ServerDetailView) => {
         detail.tools.map(tool => (
           <Box key={`tool:${tool.tool}`} flexDirection="row" justifyContent="space-between">
             <Text {...paint.type.mono} {...paint.type.footnote}>
-              {tool.tool}
+              {shorten(tool.tool, 30)}
             </Text>
             <Text {...paint.type.mono} {...paint.type.footnote} color={tool.errors > 0 ? COLORS.error : COLORS.label}>
               {`${tool.calls} calls · p50 ${tool.p50Text} · max ${tool.maxText}${tool.errors > 0 ? ` · ${tool.errors} errors` : ''}`}
@@ -437,7 +439,7 @@ const drawDetail = (paint: Paint, detail: ServerDetailView) => {
             </Text>
             <Box flexGrow={1} flexShrink={1}>
               <Text {...paint.type.mono} {...paint.type.footnote} wrap="truncate">
-                {call.tool}
+                {shorten(call.tool, 30)}
               </Text>
             </Box>
             <Svg source={barSvg(call.ms / longest, call.isOk ? paint.accent : SVG_COLORS.error, 110)} alt={call.time} width={110} height={6} />
