@@ -1,13 +1,13 @@
 # Design
 
-This document describes the layout under validation and where each value comes from. It is the contract for the first implementation; anything not listed here is out of scope for now.
+This document describes the layout and where each value comes from.
 
 ## Layouts
 
 | Layout | Surface | When |
 | --- | --- | --- |
 | Docked pane | Terminal | fullscreen mode, beside the transcript; opened by `/mirante` or on session start from 144 columns |
-| Summary band | Terminal | above the prompt, at most 8 rows: one row per panel that has something to show |
+| Summary | Terminal | inline above the prompt when the fullscreen layout is off, at most 8 rows: one row per panel that has something to show |
 | Server drill-down | Terminal | from the MCP panel: one server's tools, every call as a bar, and the last error |
 | Side panel | Desktop | the same panels as the docked pane, drawn with native controls and SVG |
 
@@ -41,7 +41,7 @@ The names below are Claude Code mod events and engine calls.
 | model, effort, permission mode, request count | `turn.step`, session settings |
 | context used and window size | `session.measure` |
 | compactions | `session.compact` |
-| turns before the next compaction | estimate: average context growth per turn over the last turns, labelled as an estimate |
+| turns before the context is full | estimate: average context growth per turn over the last turns, labelled as an estimate |
 | session cost, last turn cost | `$.session.usage()`, `turn.complete` |
 | cache hit rate | cache read tokens over all input tokens, from `turn.step` usage |
 | rate limit windows and resets | `$.session.usage()`, when the plan reports them |
@@ -74,7 +74,7 @@ The drill-down lists each tool's calls and the last error, with the call's input
 
 ### slowest
 
-The five longest tool calls of the session from `tool.call` durations, plus subagents from `agent.spawn` to `turn.complete`. The header compares the summed tool time with the turn's wall time.
+The slowest tool calls of the session from `tool.call` durations, subagents included. The header compares the time tools kept the main loop busy (overlapping calls counted once) with the turn's wall time.
 
 ### agents
 
@@ -94,13 +94,13 @@ The turn row comes from `turn.start` and `turn.complete`. The log keeps the last
 - Prompts are cut to their first characters before they reach the log.
 - Every summary of a tool call goes through a redaction step (authorization headers, bearer tokens, `*_TOKEN=` and `*_KEY=` assignments, passwords in URLs, common key prefixes) before it is kept.
 
-## Configuration (planned)
+## Configuration
 
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `panels` | `main,repo,mcp,slowest,agents,gate,turn,log` | which panels show, in order |
-| `layout` | `auto` | `band`, `pane` or `auto` |
-| `accent` | `blue` | accent color |
+| `accent` | `blue` | `blue`, `amber`, `green` or `violet` |
 | `git` | `true` | enable the repo panel and its git commands |
-| `slowest` | `5` | how many slow calls to list |
-| `openOnStart` | `true` | offer to open the pane when a session starts |
+| `slowest` | `5` | how many slow calls to list (1 to 10) |
+| `openOnStart` | `true` | open the pane when a session starts |
+| `statusLine` | `false` | context, cost and MCP trouble in the status line |

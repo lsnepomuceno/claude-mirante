@@ -1,0 +1,13 @@
+{
+  "name": "claude-mirante",
+  "description": "mirante, a live session dashboard mod for Claude Code",
+  "owner": {
+    "name": "Lucas Nepomuceno"
+  },
+  "plugins": [
+    {
+      "name": "mirante",
+      "source": "./"
+    }
+  ]
+}

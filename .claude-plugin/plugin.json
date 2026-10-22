@@ -1,0 +1,67 @@
+{
+  "name": "mirante",
+  "version": "0.1.0",
+  "description": "A live session dashboard for Claude Code: context, cost and limits, repository and worktree, MCP server health, the slowest tools, subagents, permission checks and a session log.",
+  "author": {
+    "name": "Lucas Nepomuceno",
+    "url": "https://github.com/lsnepomuceno"
+  },
+  "homepage": "https://github.com/lsnepomuceno/claude-mirante",
+  "repository": "https://github.com/lsnepomuceno/claude-mirante",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "claude-code-mod",
+    "dashboard",
+    "mcp",
+    "git",
+    "subagents",
+    "observability",
+    "tui"
+  ],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "panels": {
+      "title": "Panels",
+      "description": "Comma-separated panels in display order: main, repo, mcp, slowest, agents, gate, turn, log. Leave one out to hide it.",
+      "type": "string",
+      "default": "main,repo,mcp,slowest,agents,gate,turn,log"
+    },
+    "accent": {
+      "title": "Accent color",
+      "description": "The color of panel titles, gauges and highlights",
+      "type": "string",
+      "options": [
+        "blue",
+        "amber",
+        "green",
+        "violet"
+      ],
+      "default": "blue"
+    },
+    "git": {
+      "title": "Read git state",
+      "description": "Run read-only git commands to fill the repo panel. Off: the repo panel is hidden and no git command runs.",
+      "type": "boolean",
+      "default": true
+    },
+    "slowest": {
+      "title": "Slowest calls listed",
+      "description": "How many of the slowest tool calls the slowest panel lists (1-10)",
+      "type": "number",
+      "default": 5
+    },
+    "openOnStart": {
+      "title": "Open on start",
+      "description": "Open the pane when a session starts (the terminal seats it only from 144 columns; /mirante opens it at any width)",
+      "type": "boolean",
+      "default": true
+    },
+    "statusLine": {
+      "title": "Status line",
+      "description": "Context, cost and MCP trouble in the status line",
+      "type": "boolean",
+      "default": false
+    }
+  }
+}
