@@ -260,10 +260,10 @@ const slowCard = (paint: Paint, board: Dashboard) => {
         </Box>
         <Box flexGrow={1} flexShrink={1}>
           <Text {...paint.type.mono} {...paint.type.footnote} wrap="truncate">
-            {shorten(row.label, 30)}
+            {shorten(row.label, 24)}
           </Text>
         </Box>
-        <Svg source={barSvg(row.fraction, row.isFailed ? SVG_COLORS.error : row.kind === 'Agent' ? SVG_COLORS.agent : paint.accent, 110)} alt={`${row.time}`} width={110} height={6} />
+        <Svg source={barSvg(row.fraction, row.isFailed ? SVG_COLORS.error : row.kind === 'Agent' ? SVG_COLORS.agent : paint.accent, 64)} alt={`${row.time}`} width={64} height={6} />
         <Text {...paint.type.mono} {...paint.type.footnote} color={row.isFailed ? COLORS.error : undefined}>
           {row.time}
         </Text>
@@ -442,7 +442,7 @@ const drawDetail = (paint: Paint, detail: ServerDetailView) => {
                 {shorten(call.tool, 30)}
               </Text>
             </Box>
-            <Svg source={barSvg(call.ms / longest, call.isOk ? paint.accent : SVG_COLORS.error, 110)} alt={call.time} width={110} height={6} />
+            <Svg source={barSvg(call.ms / longest, call.isOk ? paint.accent : SVG_COLORS.error, 64)} alt={call.time} width={64} height={6} />
             <Text {...paint.type.mono} {...paint.type.footnote} color={call.isOk ? undefined : COLORS.error}>
               {call.isTimeout ? `${call.time} timeout` : call.time}
             </Text>
