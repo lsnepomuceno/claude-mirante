@@ -1,5 +1,7 @@
 import type { ElementTable, RenderChildren } from 'claude-code'
 
+import type { LogLine } from '../types'
+
 import { COLORS, SVG_COLORS, formatClock, plural, shorten } from './core'
 import type { Panel } from './core'
 import type { Dashboard, GateView, McpRowView, ServerDetailView } from './view'
@@ -24,17 +26,32 @@ const LEGACY: Typography = { caption: {}, footnote: {}, mono: {}, number: {} }
 
 const BAR_WIDTH = 300
 
+const PILL = { accent: '#2F6FDB', ok: '#23845A', error: '#C9423C', agent: '#7C4DDB', neutral: '#5A6270', warn: '#A86B0C' } as const
+
+const escapeSvg = (text: string): string => text.replace(/[<>&"]/g, char => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[char] ?? char)
+
+const pillSvg = (text: string, fill: string): { source: string; width: number } => {
+  const width = Math.round(text.length * 6.6 + 18)
+
+  return {
+    width,
+    source: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="20" viewBox="0 0 ${width} 20"><rect width="${width}" height="20" rx="10" fill="${fill}"/><text x="${width / 2}" y="14" text-anchor="middle" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="11.5" font-weight="600" fill="#FFFFFF">${escapeSvg(text)}</text></svg>`,
+  }
+}
+
+const KIND_COLOR: Record<string, string> = { Agent: SVG_COLORS.agent, MCP: '#2BB5A8', Web: SVG_COLORS.warn }
+
 const shortenStart = (text: string, room: number): string => (text.length <= room ? text : `…${text.slice(text.length - room + 1)}`)
 
-const ringSvg = (fraction: number, color: string): string => {
+const ringSvg = (fraction: number, color: string, label: string): string => {
   const radius = 34
   const length = 2 * Math.PI * radius
   const drawn = Math.min(1, Math.max(0, fraction)) * length
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${radius}" fill="none" stroke="${SVG_COLORS.track}" stroke-width="8"/><circle cx="42" cy="42" r="${radius}" fill="none" stroke="${color}" stroke-width="8" stroke-linecap="round" stroke-dasharray="${drawn.toFixed(1)} ${length.toFixed(1)}" transform="rotate(-90 42 42)"/></svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="84" height="84" viewBox="0 0 84 84"><circle cx="42" cy="42" r="${radius}" fill="none" stroke="${SVG_COLORS.track}" stroke-width="9"/><circle cx="42" cy="42" r="${radius}" fill="none" stroke="${color}" stroke-width="9" stroke-linecap="round" stroke-dasharray="${drawn.toFixed(1)} ${length.toFixed(1)}" transform="rotate(-90 42 42)"/><text x="42" y="48" text-anchor="middle" font-family="Inter,system-ui,-apple-system,Segoe UI,sans-serif" font-size="18" font-weight="700" fill="${color}">${escapeSvg(label)}</text></svg>`
 }
 
-const barSvg = (fraction: number, color: string, width = BAR_WIDTH, height = 6): string => {
+const barSvg = (fraction: number, color: string, width = BAR_WIDTH, height = 8): string => {
   const drawn = Math.max(fraction > 0 ? height : 0, Math.min(1, Math.max(0, fraction)) * width)
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}"><rect width="${width}" height="${height}" rx="${height / 2}" fill="${SVG_COLORS.track}"/><rect width="${drawn.toFixed(1)}" height="${height}" rx="${height / 2}" fill="${color}"/></svg>`
@@ -69,19 +86,19 @@ const stripSvg = (row: McpRowView, accent: string): string => {
 const GATE_FILL = { rule: SVG_COLORS.ok, approved: SVG_COLORS.approved, pending: SVG_COLORS.warn, denied: SVG_COLORS.error } as const
 
 const gateSvg = (cells: GateView['cells']): string => {
-  const perRow = 30
+  const perRow = 24
   const rows = Math.max(1, Math.ceil(cells.length / perRow))
   const squares = cells
     .map((cell, index) => {
-      const x = (index % perRow) * 12
-      const y = Math.floor(index / perRow) * 12
+      const x = (index % perRow) * 13
+      const y = Math.floor(index / perRow) * 13
       const fill = cell.isSubagent && cell.verdict === 'rule' ? SVG_COLORS.quiet : GATE_FILL[cell.verdict]
 
-      return `<rect x="${x}" y="${y}" width="9" height="9" rx="2" fill="${fill}"/>`
+      return `<rect x="${x}" y="${y}" width="11" height="11" rx="3" fill="${fill}"/>`
     })
     .join('')
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${perRow * 12}" height="${rows * 12}" viewBox="0 0 ${perRow * 12} ${rows * 12}">${squares}</svg>`
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${perRow * 13}" height="${rows * 13}" viewBox="0 0 ${perRow * 13} ${rows * 13}">${squares}</svg>`
 }
 
 const card = (paint: Paint, key: string, title: string, note: string | null, children: RenderChildren[]) => {
@@ -117,6 +134,13 @@ const stat = (paint: Paint, label: string, value: string, color?: string) => {
   )
 }
 
+const pill = (paint: Paint, key: string, text: string, fill: string) => {
+  const { Svg } = paint.E
+  const drawn = pillSvg(text, fill)
+
+  return <Svg key={key} source={drawn.source} alt={text} width={drawn.width} height={20} />
+}
+
 const mainCard = (paint: Paint, board: Dashboard) => {
   const { Box, Text, Svg } = paint.E
   const main = board.main
@@ -135,11 +159,15 @@ const mainCard = (paint: Paint, board: Dashboard) => {
     </Box>
   ))
 
-  return card(paint, 'main', [main.model, main.effort].filter(Boolean).join(' · ') || 'Session', main.sessionTime === null ? null : `session ${main.sessionTime}`, [
+  const chips = [main.model, main.effort].filter((chip): chip is string => chip !== null)
+
+  return card(paint, 'main', 'Session', main.sessionTime === null ? null : main.sessionTime, [
+    <Box key="main:chips" flexDirection="row" gap={1}>
+      {chips.map((chip, index) => pill(paint, `chip:${index}`, chip, index === 0 ? PILL.accent : PILL.neutral))}
+    </Box>,
     <Box key="main:row" flexDirection="row" gap={1} alignItems="center">
       <Box flexDirection="column" alignItems="center">
-        <Svg source={ringSvg(percent / 100, percent >= 85 ? SVG_COLORS.warn : paint.accent)} alt={`Context ${percent} percent used`} width={84} height={84} />
-        <Text {...paint.type.mono} bold>{main.context === null ? '·' : `${percent}%`}</Text>
+        <Svg source={ringSvg(percent / 100, percent >= 85 ? SVG_COLORS.warn : paint.accent, main.context === null ? '·' : `${percent}%`)} alt={`Context ${percent} percent used`} width={84} height={84} />
         <Text {...paint.type.caption} color={COLORS.label}>
           {main.context === null ? 'context' : `${main.context.used}/${main.context.window}`}
         </Text>
@@ -169,10 +197,10 @@ const repoCard = (paint: Paint, board: Dashboard) => {
   const { Box, Text, Svg } = paint.E
 
   return card(paint, 'repo', 'Repository', repo.worktree === null ? repo.repository : `${repo.repository} · worktree ${repo.worktree}`, [
-    <Box key="repo:branch" flexDirection="row" gap={1}>
-      <Text {...paint.type.mono}>{`⎇ ${repo.branch}`}</Text>
-      {repo.ahead ? <Text color={COLORS.ok}>{`↑${repo.ahead}`}</Text> : null}
-      {repo.behind ? <Text color={COLORS.label}>{`↓${repo.behind}`}</Text> : null}
+    <Box key="repo:branch" flexDirection="row" gap={1} alignItems="center">
+      {pill(paint, 'repo:branch:name', `⎇ ${repo.branch}`, PILL.accent)}
+      {repo.ahead ? pill(paint, 'repo:ahead', `↑${repo.ahead}`, PILL.ok) : null}
+      {repo.behind ? pill(paint, 'repo:behind', `↓${repo.behind}`, PILL.warn) : null}
       <Text {...paint.type.caption} color={COLORS.label}>
         {repo.upstream === null ? 'no upstream' : `vs ${repo.upstream}`}
       </Text>
@@ -196,11 +224,7 @@ const repoCard = (paint: Paint, board: Dashboard) => {
       </Text>
     ) : null,
     <Box key="repo:hooks" flexDirection="row" gap={1} flexWrap="wrap">
-      {repo.hooks.map(hook => (
-        <Text {...paint.type.caption} color={hook.isOk ? COLORS.ok : COLORS.error}>
-          {`${hook.isOk ? '✓' : '✗'} ${hook.name} ${hook.detail === null ? '' : `· ${hook.detail} `}${hook.time}`}
-        </Text>
-      ))}
+      {repo.hooks.map((hook, index) => pill(paint, `hook:${index}`, `${hook.isOk ? '✓' : '✗'} ${hook.name} ${hook.time}`, hook.isOk ? PILL.ok : PILL.error))}
       {repo.untracked > 0 ? <Text {...paint.type.caption} color={COLORS.label}>{`${repo.untracked} untracked`}</Text> : null}
     </Box>,
   ])
@@ -263,7 +287,7 @@ const slowCard = (paint: Paint, board: Dashboard) => {
             {shorten(row.label, 24)}
           </Text>
         </Box>
-        <Svg source={barSvg(row.fraction, row.isFailed ? SVG_COLORS.error : row.kind === 'Agent' ? SVG_COLORS.agent : paint.accent, 64)} alt={`${row.time}`} width={64} height={6} />
+        <Svg source={barSvg(row.fraction, row.isFailed ? SVG_COLORS.error : KIND_COLOR[row.kind] ?? paint.accent, 64)} alt={`${row.time}`} width={64} height={8} />
         <Text {...paint.type.mono} {...paint.type.footnote} color={row.isFailed ? COLORS.error : undefined}>
           {row.time}
         </Text>
@@ -289,9 +313,10 @@ const agentsCard = (paint: Paint, board: Dashboard) => {
             {`${agent.state === 'running' ? '●' : agent.state === 'failed' ? '✗' : '✓'} ${agent.label}`}
           </Text>
           <Text {...paint.type.caption} color={COLORS.label}>
-            {`${agent.type} · ${agent.elapsed}`}
+            {agent.type}
           </Text>
           <Text {...paint.type.mono} {...paint.type.footnote}>{`${agent.context} ctx · ${plural(agent.steps, 'step')}`}</Text>
+          {pill(paint, `agent:${agent.id}:state`, agent.state === 'running' ? `running ${agent.elapsed}` : agent.state === 'failed' ? `failed ${agent.elapsed}` : `done in ${agent.elapsed}`, agent.state === 'running' ? PILL.agent : agent.state === 'failed' ? PILL.error : PILL.ok)}
         </Box>
       ))}
     </Box>,
@@ -344,6 +369,17 @@ const turnCard = (paint: Paint, board: Dashboard) => {
   )
 }
 
+const LOG_MARK: Record<LogLine['kind'], [string, string | undefined]> = {
+  prompt: ['›', undefined],
+  spawn: ['⇢', COLORS.agent],
+  done: ['✓', COLORS.ok],
+  edit: ['✎', COLORS.approved],
+  error: ['✗', COLORS.error],
+  denied: ['■', COLORS.error],
+  compact: ['⟲', COLORS.warn],
+  hook: ['⚑', COLORS.warn],
+}
+
 const logCard = (paint: Paint, board: Dashboard) => {
   if (board.log.length === 0) {
     return null
@@ -359,6 +395,7 @@ const logCard = (paint: Paint, board: Dashboard) => {
     board.log.map(entry => (
       <Text {...paint.type.footnote} wrap="truncate">
         <Text {...paint.type.mono} color={COLORS.label}>{`${formatClock(entry.at)}  `}</Text>
+        <Text bold color={LOG_MARK[entry.kind][1] ?? paint.accent}>{`${LOG_MARK[entry.kind][0]} `}</Text>
         <Text color={entry.kind === 'error' || entry.kind === 'denied' ? COLORS.error : undefined}>{entry.text}</Text>
       </Text>
     )),
@@ -442,7 +479,7 @@ const drawDetail = (paint: Paint, detail: ServerDetailView) => {
                 {shorten(call.tool, 30)}
               </Text>
             </Box>
-            <Svg source={barSvg(call.ms / longest, call.isOk ? paint.accent : SVG_COLORS.error, 64)} alt={call.time} width={64} height={6} />
+            <Svg source={barSvg(call.ms / longest, call.isOk ? paint.accent : SVG_COLORS.error, 64)} alt={call.time} width={64} height={8} />
             <Text {...paint.type.mono} {...paint.type.footnote} color={call.isOk ? undefined : COLORS.error}>
               {call.isTimeout ? `${call.time} timeout` : call.time}
             </Text>
