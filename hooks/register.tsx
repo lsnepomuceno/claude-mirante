@@ -57,6 +57,7 @@ const checks = atom({ plugin: 'mirante', key: 'checks' } as const, [] as Check[]
 const turn = atom({ plugin: 'mirante', key: 'turn' } as const, emptyTurn())
 const log = atom({ plugin: 'mirante', key: 'log' } as const, [] as LogLine[])
 const view = atom({ plugin: 'mirante', key: 'view' } as const, { server: null } as View)
+const isBandHidden = atom({ plugin: 'mirante', key: 'isBandHidden' } as const, false)
 
 type Engine = EngineInterface
 
@@ -226,8 +227,8 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     await $.command.register({
       name: 'mirante',
-      description: 'Open the mirante dashboard (close, reset, or mcp <server>)',
-      argumentHint: '[close | reset | mcp <server>]',
+      description: 'Open the mirante dashboard (close, hide, show, reset, or mcp <server>)',
+      argumentHint: '[close | hide | show | reset | mcp <server>]',
     })
 
     home = (await $.env.get('HOME').catch(() => undefined)) ?? null
@@ -241,7 +242,7 @@ export const register: Register = (on, options) => {
       void tick($)
     })
 
-    if (config.openOnStart) {
+    if (config.openOnStart && config.layout === 'pane') {
       void $.ui.open({ id: PANE, title: TITLE })
     }
 
@@ -255,6 +256,12 @@ export const register: Register = (on, options) => {
       await $.ui.close({ id: PANE })
 
       return { text: 'mirante closed.' }
+    }
+
+    if (action === 'hide' || action === 'show') {
+      await update($, isBandHidden, () => action === 'hide')
+
+      return { text: action === 'hide' ? 'mirante band hidden (/mirante show brings it back).' : 'mirante band shown.' }
     }
 
     if (action === 'reset') {
@@ -546,6 +553,17 @@ export const register: Register = (on, options) => {
     }
 
     return next(e)
+  })
+
+  on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
+    if (config.layout !== 'band' || e.props.hasSurvey || (await read($, isBandHidden))) {
+      return next(e)
+    }
+
+    const board = buildDashboard(await snapshotOf($), config, { fileRows: 0, slowRows: 3, agentCards: 3, gateCells: 0, logRows: 0 })
+    const { Box, Text } = $.ui.resolve(e)
+
+    return drawInline({ Box, Text } as Parameters<typeof drawInline>[0], board, config.accent, e.props.bodyColumns, Math.min(8, e.props.maxRows), true)
   })
 
   on('ui.render', { component: 'Pane', requestId: PANE }, async ($, e) => {

@@ -58,6 +58,7 @@ export type Config = {
   accent: string
   isGitOn: boolean
   slowest: number
+  layout: 'pane' | 'band'
   openOnStart: boolean
   statusLine: boolean
 }
@@ -72,6 +73,7 @@ export const readConfig = (options: Record<string, unknown>): Config => {
     accent: ACCENTS[accentName] ?? ACCENTS.blue,
     isGitOn,
     slowest: Number.isFinite(slowest) ? Math.min(10, Math.max(1, Math.round(slowest))) : 5,
+    layout: options.layout === 'band' ? 'band' : 'pane',
     openOnStart: options.openOnStart !== false,
     statusLine: options.statusLine === true,
   }

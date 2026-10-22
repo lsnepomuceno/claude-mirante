@@ -101,3 +101,53 @@ test('a denied call is counted in the gate and written to the log', async ($, on
   expect(await ui.find({ type: 'Text', text: /denied Bash rm -rf dist/ })).toBeDefined()
   await ui.unmount()
 })
+
+const band = {
+  plugin: 'mirante',
+  component: 'AbovePrompt',
+  requestId: 'band',
+  props: { hasSurvey: false, isWorking: false, maxRows: 8, bodyColumns: 100, scroll: { offset: 0, bodyRows: 8 }, view: {} },
+} as const
+
+test('with the band layout the summary sits above the prompt, and hide takes it away', { options: { layout: 'band' } }, async ($, on) => {
+  engine(on)
+  mock.clock(on)
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>engine band</Text>
+  })
+
+  await $.session.start({ cwd: '/work/app', surface: 'terminal', isInteractive: true })
+  await $.tool.call({ tool: 'mcp__atlassian__search_issues', jql: 'project = APP' } as never)
+
+  for (const surface of ['terminal', 'desktop'] as const) {
+    const ui = await $.ui.mount({ ...band, surface })
+
+    expect(await ui.find({ type: 'Text', text: /1 timeout/ })).toBeDefined()
+    await ui.unmount()
+  }
+
+  await $.command.run({ command: 'mirante', args: 'hide' } as never)
+  const hidden = await $.ui.mount({ ...band, surface: 'terminal' })
+
+  expect(await hidden.find({ type: 'Text', text: /1 timeout/ })).toBeUndefined()
+  expect(await hidden.find({ type: 'Text', text: /engine band/ })).toBeDefined()
+  await hidden.unmount()
+})
+
+test('with the pane layout the band is left to the engine', async ($, on) => {
+  engine(on)
+  mock.clock(on)
+  on('ui.render', ($, e) => {
+    const { Text } = $.ui.resolve(e)
+
+    return <Text>engine band</Text>
+  })
+
+  await $.session.start({ cwd: '/work/app', surface: 'terminal', isInteractive: true })
+  const ui = await $.ui.mount({ ...band, surface: 'terminal' })
+
+  expect((await ui.find({ type: 'Text', text: /engine band/ }))?.text).toBe('engine band')
+  await ui.unmount()
+})

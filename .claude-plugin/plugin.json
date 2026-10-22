@@ -1,6 +1,6 @@
 {
   "name": "mirante",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "A live session dashboard for Claude Code: context, cost and limits, repository and worktree, MCP server health, the slowest tools, subagents, permission checks and a session log.",
   "author": {
     "name": "Lucas Nepomuceno",
@@ -26,6 +26,16 @@
       "description": "Comma-separated panels in display order: main, repo, mcp, slowest, agents, gate, turn, log. Leave one out to hide it.",
       "type": "string",
       "default": "main,repo,mcp,slowest,agents,gate,turn,log"
+    },
+    "layout": {
+      "title": "Layout",
+      "description": "pane: the dashboard opens as a pane (docked beside the transcript in fullscreen, above the prompt otherwise). band: a summary of up to eight rows above the prompt in every layout, fullscreen included; /mirante still opens the full pane.",
+      "type": "string",
+      "options": [
+        "pane",
+        "band"
+      ],
+      "default": "pane"
     },
     "accent": {
       "title": "Accent color",

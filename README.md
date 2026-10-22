@@ -76,6 +76,10 @@ Without the fullscreen layout, the pane opens above the prompt as a summary of a
 
 <p align="center"><img src="docs/media/inline.svg" alt="The inline summary above the prompt" width="100%"></p>
 
+With `layout` set to `band`, the same summary stays above the prompt in every layout, fullscreen included, and the side pane opens only when you ask for it with `/mirante`:
+
+<p align="center"><img src="docs/media/band.svg" alt="The mirante band above the prompt in the fullscreen layout" width="100%"></p>
+
 The terminal images are captures of real Claude Code sessions run in this repository.
 
 ### In the desktop app
@@ -92,6 +96,7 @@ A capture of a real session in this repository, in the desktop app's Code tab.
 | --- | --- |
 | `/mirante` | open the pane (or bring it back to the dashboard) |
 | `/mirante mcp <server>` | open the drill-down for one MCP server |
+| `/mirante hide`, `/mirante show` | hide or bring back the band above the prompt (`layout` set to `band`) |
 | `/mirante reset` | clear MCP calls, slow calls, agents, checks, the log and the turn (context, cost and limits stay) |
 | `/mirante close` | close the pane |
 
@@ -99,6 +104,7 @@ A capture of a real session in this repository, in the desktop app's Code tab.
 
 - **Close the pane** with `/mirante close`, or with the `✕` Claude Code draws in the pane's corner. `/mirante` opens it again.
 - **Keep it closed at start** by turning `openOnStart` off in `/config`. The pane then opens only when you run `/mirante`.
+- **Prefer a summary** by setting `layout` to `band`: no side pane, a few rows above the prompt instead. `/mirante hide` and `/mirante show` toggle it, and the `[-]` beside it collapses it.
 - **Turn the mod off** in `/plugin`, or remove it with `claude plugin uninstall mirante`.
 
 ## Configure
@@ -108,10 +114,11 @@ In `/config`, or under `pluginConfigs["mirante"].options` in `settings.json`:
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `panels` | `main,repo,mcp,slowest,agents,gate,turn,log` | which panels show, in order |
+| `layout` | `pane` | `pane`: the dashboard opens as a pane, docked beside the transcript in fullscreen and above the prompt otherwise. `band`: a summary of up to eight rows above the prompt in every layout; `/mirante` still opens the full pane |
 | `accent` | `blue` | `blue`, `amber`, `green` or `violet` |
 | `git` | `true` | read git state for the repo panel; off hides the panel and runs no git command |
 | `slowest` | `5` | how many slow calls the slowest panel lists (1 to 10) |
-| `openOnStart` | `true` | open the pane when a session starts (the terminal seats it unasked only from 144 columns) |
+| `openOnStart` | `true` | open the pane when a session starts (the terminal seats it unasked only from 144 columns); with `layout` set to `band` the band shows instead |
 | `statusLine` | `false` | context, cost and MCP trouble in the status line |
 
 ## Principles

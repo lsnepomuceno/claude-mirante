@@ -122,6 +122,7 @@ declare module 'claude-code' {
       turn: Turn
       log: LogLine[]
       view: View
+      isBandHidden: boolean
     }
   }
 }

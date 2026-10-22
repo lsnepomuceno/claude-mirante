@@ -494,8 +494,8 @@ const drawDetail = (paint: Paint, detail: ServerDetailView) => {
   )
 }
 
-export const drawInline = (E: Elements, board: Dashboard, accent: string, columns: number, maxRows: number) => {
-  const paint: Paint = { E, accent, inner: Math.max(20, columns - 2), openServer: () => undefined }
+export const drawInline = (E: Elements, board: Dashboard, accent: string, columns: number, maxRows: number, isFramed = false) => {
+  const paint: Paint = { E, accent, inner: Math.max(20, columns - (isFramed ? 4 : 2)), openServer: () => undefined }
   const rows: RenderChildren[] = []
   const main = board.main
 
@@ -579,6 +579,10 @@ export const drawInline = (E: Elements, board: Dashboard, accent: string, column
   }
 
   const { Box } = paint.E
+
+  if (isFramed) {
+    return panel(paint, '◆ mirante', '/mirante', rows.slice(0, Math.max(1, maxRows - 2)))
+  }
 
   return (
     <Box flexDirection="column" paddingX={1}>

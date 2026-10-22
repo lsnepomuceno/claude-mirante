@@ -8,6 +8,7 @@ This document describes the layout and where each value comes from.
 | --- | --- | --- |
 | Docked pane | Terminal | fullscreen mode, beside the transcript; opened by `/mirante` or on session start from 144 columns |
 | Summary | Terminal | inline above the prompt when the fullscreen layout is off, at most 8 rows: one row per panel that has something to show |
+| Band | Terminal and desktop | with `layout` set to `band`: the summary above the prompt in every layout, fullscreen included, framed and titled; `/mirante hide` and `/mirante show` toggle it |
 | Server drill-down | Terminal and desktop | from a row of the MCP panel or `/mirante mcp <server>`: one server's tools, its latest calls as bars, and the last error |
 | Side panel | Desktop | the same panels as the docked pane, drawn with native controls and SVG |
 
@@ -100,6 +101,7 @@ The turn row comes from `turn.start` and `turn.complete`. A subagent handing its
 | Option | Default | Meaning |
 | --- | --- | --- |
 | `panels` | `main,repo,mcp,slowest,agents,gate,turn,log` | which panels show, in order |
+| `layout` | `pane` | `pane` or `band` |
 | `accent` | `blue` | `blue`, `amber`, `green` or `violet` |
 | `git` | `true` | enable the repo panel and its git commands |
 | `slowest` | `5` | how many slow calls to list (1 to 10) |
