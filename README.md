@@ -41,7 +41,7 @@ claude plugin install mirante --marketplace lsnepomuceno/claude-mirante
 
 In the desktop app, where `/plugin` does not run: click **+** next to the prompt box, then **Plugins**, **Add marketplace** with `lsnepomuceno/claude-mirante`, then **Add plugin**.
 
-Then open it with `/mirante`. Mods are an early access Claude Code feature; mirante was built and tested on Claude Code 2.1.308.
+Then open it with `/mirante`. Mods are an early access Claude Code feature; mirante is tested on Claude Code 2.1.308 in the terminal and on the desktop app's bundled 2.1.295. On engines older than 2.1.307 the desktop panel is drawn without the newer text styles (sizes, weights, monospace), which those engines refuse.
 
 ## Why
 

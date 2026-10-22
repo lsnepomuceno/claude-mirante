@@ -89,6 +89,7 @@ test('a denied call is counted in the gate and written to the log', async ($, on
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('session.usage', () => ({ value: { startedAt: 0, context: { window: 200_000 }, rateLimits: [] } }))
   on('tool.check', () => ({ decision: 'deny', reason: 'rule' }))
+  on('tool.call', () => ({ deny: 'denied by rule' }))
   mock.clock(on)
 
   await $.session.start({ cwd: '/work/app', surface: 'terminal', isInteractive: true })

@@ -5,6 +5,7 @@ import type { AgentCard, Check, LogLine, McpServer, Repo, Slow, View } from '../
 import {
   EDIT_TOOLS,
   LIMITS,
+  TYPOGRAPHY_SINCE,
   contextOf,
   countLines,
   cwdFromCommand,
@@ -16,6 +17,7 @@ import {
   gitActionOf,
   healthOf,
   hookRunOf,
+  isAtLeast,
   isHandBack,
   isTimeoutText,
   parseAheadBehind,
@@ -162,6 +164,7 @@ const readGit = async ($: Engine, cwd: string): Promise<Partial<Repo>> => {
 }
 
 let home: string | null = null
+let hasTypography = false
 let isRefreshing = false
 let isRefreshWanted = false
 
@@ -228,6 +231,7 @@ export const register: Register = (on, options) => {
     })
 
     home = (await $.env.get('HOME').catch(() => undefined)) ?? null
+    hasTypography = isAtLeast((await $.session.version().catch(() => null))?.version ?? '0.0.0', TYPOGRAPHY_SINCE)
     const usage = await $.session.usage().catch(() => null)
     await update($, main, current => ({ ...current, sessionStartedAt: usage?.startedAt ?? null }))
     await update($, repo, current => ({ ...current, cwd: e.cwd }))
@@ -566,7 +570,7 @@ export const register: Register = (on, options) => {
 
     const { Box, Text, Button, Svg } = $.ui.resolve(e)
 
-    return drawRich({ Box, Text, Button, Svg }, board, config.accent, name => showServer($, name))
+    return drawRich({ Box, Text, Button, Svg }, board, config.accent, name => showServer($, name), hasTypography)
   })
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "mirante",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A live session dashboard for Claude Code: context, cost and limits, repository and worktree, MCP server health, the slowest tools, subagents, permission checks and a session log.",
   "author": {
     "name": "Lucas Nepomuceno",

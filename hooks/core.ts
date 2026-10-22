@@ -661,6 +661,26 @@ export const turnsUntilFull = (main: Main): number | null => {
 }
 
 
+export const TYPOGRAPHY_SINCE = '2.1.307'
+
+export const isAtLeast = (version: string, wanted: string): boolean => {
+  const parse = (text: string) => (/^(\d+)\.(\d+)\.(\d+)/.exec(text) ?? []).slice(1, 4).map(Number)
+  const have = parse(version)
+  const need = parse(wanted)
+
+  if (have.length < 3) {
+    return false
+  }
+
+  for (let index = 0; index < 3; index += 1) {
+    if ((have[index] ?? 0) !== (need[index] ?? 0)) {
+      return (have[index] ?? 0) > (need[index] ?? 0)
+    }
+  }
+
+  return true
+}
+
 export const isHandBack = (text: string): boolean => /^\s*<(agent-message|task-notification|teammate-message)\b/.test(text)
 
 export const pushLog = (log: readonly LogLine[], at: number, kind: LogKind, text: string): LogLine[] =>

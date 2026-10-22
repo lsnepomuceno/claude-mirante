@@ -9,6 +9,7 @@ import {
   gitActionOf,
   healthOf,
   hookRunOf,
+  isAtLeast,
   isHandBack,
   parseAheadBehind,
   parseMcpTool,
@@ -165,5 +166,14 @@ describe('turns', () => {
     expect(isHandBack('<agent-message from="a1"> [Subagent hand-back] done')).toBe(true)
     expect(isHandBack('<task-notification> build finished')).toBe(true)
     expect(isHandBack('review the <agent-message> parser')).toBe(false)
+  })
+})
+
+describe('engine version', () => {
+  test('compares versions part by part', async () => {
+    expect(isAtLeast('2.1.308 (Claude Code)', '2.1.307')).toBe(true)
+    expect(isAtLeast('2.1.295', '2.1.307')).toBe(false)
+    expect(isAtLeast('2.2.0', '2.1.307')).toBe(true)
+    expect(isAtLeast('unknown', '2.1.307')).toBe(false)
   })
 })
