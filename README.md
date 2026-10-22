@@ -95,6 +95,12 @@ A capture of a real session in this repository, in the desktop app's Code tab.
 | `/mirante reset` | clear MCP calls, slow calls, agents, checks, the log and the turn (context, cost and limits stay) |
 | `/mirante close` | close the pane |
 
+## Hide or remove
+
+- **Close the pane** with `/mirante close`, or with the `✕` Claude Code draws in the pane's corner. `/mirante` opens it again.
+- **Keep it closed at start** by turning `openOnStart` off in `/config`. The pane then opens only when you run `/mirante`.
+- **Turn the mod off** in `/plugin`, or remove it with `claude plugin uninstall mirante`.
+
 ## Configure
 
 In `/config`, or under `pluginConfigs["mirante"].options` in `settings.json`:
@@ -114,7 +120,7 @@ In `/config`, or under `pluginConfigs["mirante"].options` in `settings.json`:
 - **Local only.** No network requests, no telemetry, nothing stored past the session.
 - **Measured, not guessed.** Every number comes from a session event. The one estimate, turns left before the context is full, says so.
 - **Credentials masked.** Summaries of tool calls go through a redaction step (authorization headers, bearer tokens, `*_TOKEN=` style assignments, `curl -u`, passwords in URLs, common key prefixes) before they are kept.
-- **Git is optional.** The repo panel runs read-only git commands (`rev-parse`, `rev-list`, `merge-base`, `diff --numstat`, `ls-files`, `stash list`), at most once per settled shell call or edit, never on a timer. Turning `git` off stops them.
+- **Git is optional.** The repo panel runs read-only git commands (`rev-parse`, `rev-list`, `merge-base`, `diff --numstat`, `ls-files`, `stash list`), once at session start and then after shell calls and edits settle, one refresh at a time, never on a timer. Turning `git` off stops them.
 
 ## How it works
 

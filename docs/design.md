@@ -8,7 +8,7 @@ This document describes the layout and where each value comes from.
 | --- | --- | --- |
 | Docked pane | Terminal | fullscreen mode, beside the transcript; opened by `/mirante` or on session start from 144 columns |
 | Summary | Terminal | inline above the prompt when the fullscreen layout is off, at most 8 rows: one row per panel that has something to show |
-| Server drill-down | Terminal | from the MCP panel: one server's tools, every call as a bar, and the last error |
+| Server drill-down | Terminal and desktop | from a row of the MCP panel or `/mirante mcp <server>`: one server's tools, its latest calls as bars, and the last error |
 | Side panel | Desktop | the same panels as the docked pane, drawn with native controls and SVG |
 
 ### Terminal
@@ -20,9 +20,9 @@ This document describes the layout and where each value comes from.
 
 ### Desktop
 
-- Proportional font for labels, monospace for numbers, paths and commands.
-- Panels are cards. The context gauge is a ring; limits, diff size and tool time are bars; MCP latency is one small bar per call.
-- Follows the app theme, light or dark.
+- Panels are cards. The context gauge is a ring with the percent inside; limits, diff size and tool time are bars; MCP latency is one small bar per call; model, effort, branch, ahead and behind, hooks and agent state are colored pills.
+- Text takes the app theme's colors. Rings, bars and pills are SVG with fixed colors chosen to read on both themes.
+- Text sizes, weights and a monospace font for numbers and paths are used from Claude Code 2.1.307; older engines (the desktop app bundles its own) refuse them, so there the panel keeps plain text and leans on the SVG for color.
 
 ### Shared
 
@@ -38,15 +38,16 @@ The names below are Claude Code mod events and engine calls.
 
 | Value | Source |
 | --- | --- |
-| model, effort, permission mode, request count | `turn.step`, session settings |
-| context used and window size | `session.measure` |
+| model, effort, request count | the main loop's `turn.step` |
+| session length | `$.session.usage()` at session start |
+| context used and window size | `session.measure`, and the input of the latest main loop request |
 | compactions | `session.compact` |
-| turns before the context is full | estimate: average context growth per turn over the last turns, labelled as an estimate |
-| session cost, last turn cost | `$.session.usage()`, `turn.complete` |
+| turns before the context is full | estimate: average context growth over the last turns, labelled as an estimate |
+| session cost | `session.measure` |
+| last turn cost | the session cost at `turn.complete` less the cost at `turn.start` |
 | cache hit rate | cache read tokens over all input tokens, from `turn.step` usage |
-| rate limit windows and resets | `$.session.usage()`, when the plan reports them |
+| rate limit windows and resets | `session.measure`, when the plan reports them |
 | time to first token, output tokens per second | timed around the main loop's `turn.step` |
-| retries | `turn.step` attempts |
 
 ### repo
 
@@ -55,10 +56,10 @@ The names below are Claude Code mod events and engine calls.
 | repository, worktree, branch | the working directory of the session and of each shell call (`tool.call` for `Bash`), resolved with read-only git commands |
 | ahead and behind | `git rev-list --left-right --count` against the upstream |
 | files changed, lines added and removed | `git diff --numstat` against the merge base, refreshed after edits and shell calls |
-| untracked files, stashes | `git status --porcelain`, `git stash list` |
+| untracked files, stashes | `git ls-files --others --exclude-standard`, `git stash list` |
 | hook results | shell calls running `git commit` or `git push`: exit status, duration, and the hook named in the output |
 
-Git commands run only while the repo panel is enabled, never more than once per settled tool call, and never in the background on a timer.
+Git commands run only while the repo panel is enabled: once at session start, then after shell calls and edits settle, one refresh at a time and never on a timer.
 
 ### mcp
 
@@ -68,9 +69,9 @@ Git commands run only while the repo panel is enabled, never more than once per 
 | duration | timed around `next(e)` in the `tool.call` hook |
 | errors and timeouts | the call result's error flag and text |
 | p50, p95, max | computed over the session's calls |
-| server state | healthy, degraded (a timeout or error in the last calls) or down (every recent call failed) |
+| server state | healthy; degraded when one of the last five calls failed; down when the last three failed |
 
-The drill-down lists each tool's calls and the last error, with the call's input summarized and credentials masked.
+The drill-down lists each tool with its calls, p50, max and errors, the latest calls as bars, and the last error's message with credentials masked.
 
 ### slowest
 
@@ -78,7 +79,7 @@ The slowest tool calls of the session from `tool.call` durations, subagents incl
 
 ### agents
 
-Cards from `agent.spawn`, updated by each subagent's `turn.step` and closed by its `turn.complete`: task, type, context, output tokens, steps and a clock. Beyond the cards that fit, swimlanes on one time axis.
+Cards from `agent.spawn`, updated by each subagent's `turn.step` and closed by its `turn.complete`: task, type, context, output tokens, steps and a clock. The running ones come first, then the latest finished, as many as fit.
 
 ### gate
 
@@ -86,7 +87,7 @@ One cell per `tool.check`, settled by the `tool.call` around it: allowed by a ru
 
 ### turn and log
 
-The turn row comes from `turn.start` and `turn.complete`. The log keeps the last entries of prompts (first characters only), spawns, completions, edits, errors and denials; it filters to one agent while that agent's transcript is open.
+The turn row comes from `turn.start` and `turn.complete`. A subagent handing its result back starts a turn of its own in the engine; mirante counts it as part of the turn that spawned the subagent. The log keeps the latest entries of prompts (first characters only), spawns, completions, edits, errors, denials, compactions and failed hooks.
 
 ## Privacy
 
