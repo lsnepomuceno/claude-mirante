@@ -80,16 +80,11 @@ The terminal images are captures of real Claude Code sessions run in this reposi
 
 ### In the desktop app
 
-The same panels, drawn with native controls and SVG gauges, following the app theme.
+The same panels in the Code tab of the desktop app, drawn with native controls and SVG gauges:
 
-<table>
-  <tr>
-    <td><img src="docs/media/desktop-dark.png" alt="The desktop panel in the dark theme" width="100%"></td>
-    <td><img src="docs/media/desktop-light.png" alt="The desktop panel in the light theme" width="100%"></td>
-  </tr>
-</table>
+<p align="center"><img src="docs/media/desktop.png" alt="The mirante panel beside a Code session in the Claude desktop app" width="396"></p>
 
-The desktop images are rendered from the panel's design with sample data.
+A capture of a real session in this repository, in the desktop app's Code tab.
 
 ## Commands
 
