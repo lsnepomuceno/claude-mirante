@@ -11,6 +11,7 @@ import {
   hookRunOf,
   isAtLeast,
   isHandBack,
+  openCardOf,
   parseAheadBehind,
   parseMcpTool,
   parseNumstat,
@@ -177,3 +178,31 @@ describe('engine version', () => {
     expect(isAtLeast('unknown', '2.1.307')).toBe(false)
   })
 })
+
+describe('openCardOf', () => {
+  const card = (id: string, agentId: string, endedAt: number | null) => ({
+    id,
+    agentId,
+    label: id,
+    type: 'general-purpose',
+    isBackground: true,
+    startedAt: 0,
+    endedAt,
+    steps: 0,
+    contextTokens: 0,
+    outputTokens: 0,
+    isFailed: false,
+    hitMaxTokens: false,
+  })
+
+  test('finds the card a resumed agent opened, not the one its first run closed', async () => {
+    const agents = [card('first-run', 'a1', 100), card('other', 'a2', null), card('resumed', 'a1', null)]
+
+    expect(openCardOf(agents, 'a1')?.id).toBe('resumed')
+  })
+
+  test('finds nothing once every card of the agent is closed', async () => {
+    expect(openCardOf([card('first-run', 'a1', 100)], 'a1')).toBeUndefined()
+  })
+})
+

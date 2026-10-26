@@ -26,6 +26,7 @@ import {
   parseRevParse,
   pushLog,
   readConfig,
+  openCardOf,
   recordAgent,
   recordCheck,
   recordMcpCall,
@@ -533,9 +534,9 @@ export const register: Register = (on, options) => {
     if (e.agentId !== undefined) {
       const agentId = e.agentId
       const list = await read($, agents)
-      const card = list.find(known => known.agentId === agentId)
+      const card = openCardOf(list, agentId)
 
-      if (card !== undefined && card.endedAt === null) {
+      if (card !== undefined) {
         await update($, agents, cards => updateAgent(cards, known => known.id === card.id, known => ({ ...known, endedAt: at, isFailed: e.isAborted })))
         await say($, e.isAborted ? 'error' : 'done', `${card.label} ${e.isAborted ? 'stopped' : 'done'} in ${formatMs(at - card.startedAt)}`)
       }

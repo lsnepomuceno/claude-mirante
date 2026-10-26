@@ -619,6 +619,9 @@ export const gateTotals = (checks: readonly Check[]): GateTotals => {
 export const recordAgent = (agents: readonly AgentCard[], card: AgentCard): AgentCard[] =>
   [...agents.filter(known => known.id !== card.id), card].slice(-LIMITS.agents)
 
+export const openCardOf = (agents: readonly AgentCard[], agentId: string): AgentCard | undefined =>
+  [...agents].reverse().find(card => card.agentId === agentId && card.endedAt === null)
+
 export const updateAgent = (
   agents: readonly AgentCard[],
   match: (card: AgentCard) => boolean,
